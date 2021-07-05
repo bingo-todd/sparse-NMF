@@ -2,9 +2,9 @@
 import numpy as np
 
 
-def sparse_nmf(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
-               display=False, random_seed=1, init_w=None, r=None, init_h=None,
-               w_update_indices=None, h_update_indices=None):
+def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
+              display=False, random_seed=1, init_w=None, r=None, init_h=None,
+              w_update_indices=None, h_update_indices=None):
     """Compute a sparse non-negative matrix factorization.
 
     Inputs:

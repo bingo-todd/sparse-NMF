@@ -1,6 +1,6 @@
 # -*-coding:utf-8-*-
 import scipy.io
-from sparse_nmf import sparse_nmf
+from sparseNMF import sparseNMF
 import matplotlib.pyplot as plt
 
 
@@ -19,7 +19,7 @@ def main():
     display = True
     random_seed = 1
 
-    w, h, objective_div, objective_cost = sparse_nmf(
+    w, h, objective_div, objective_cost = sparseNMF(
         v, cf=cf, sparsity=sparsity, max_iter=max_iter, conv_eps=conv_eps,
         display=display, random_seed=random_seed, r=r)
 
