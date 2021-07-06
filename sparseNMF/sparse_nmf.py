@@ -4,7 +4,7 @@ import numpy as np
 
 def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
               display=False, random_seed=1, init_w=None, r=None, init_h=None,
-              w_update_indices=None, h_update_indices=None):
+              w_update_indices=None, h_update_indices=None, print_log=False):
     """Compute a sparse non-negative matrix factorization.
 
     Inputs:
@@ -34,6 +34,11 @@ def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
     - h: matrix of activations
     - objective: objective function values throughout the iterations
     """
+
+    def log(info):
+        if print_log:
+            print(info)
+
     m, n = v.shape
 
     # overwrite cost function
@@ -46,8 +51,8 @@ def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
 
     if random_seed > 0:
         random_seed = int(random_seed)
-        print('WARNING: using non-random seed for matrix optimisation: '
-              + str(random_seed))
+        log('WARNING: using non-random seed for matrix optimisation: '
+            + str(random_seed))
         np.random.seed(random_seed)
 
     if init_w is None:  # init w
@@ -65,9 +70,6 @@ def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
 
     if init_h is None:  # init h
         h = np.random.rand(r, n)
-    elif init_h == 'ones':
-        print('INFO: initializing H with ones')
-        h = np.ones((r, n))
     else:
         h = init_h
 
@@ -77,16 +79,10 @@ def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
     if h_update_indices is None:
         h_update_indices = np.ones(r, dtype=np.bool)
 
-    # sparsity per matrix entry, same value for elements of a atom basis
-    if type(sparsity) in (int, float):
-        sparsity = np.ones((r, n))*sparsity
-    elif sparsity.shape[1] == 1:
-        sparsity = np.tile(sparsity, (1, n))  # to debug
-
     # Normalize the columns of W and rescale H accordingly
-    wn = np.sqrt(np.sum(w**2, axis=0))      # wn = sqrt(sum(w.^2));
-    w = w/wn[np.newaxis, :]                 # w  = bsxfun(@rdivide,w,wn);
-    h = h*wn[:, np.newaxis]                 # h  = bsxfun(@times,  h,wn');
+    wn = np.sqrt(np.sum(w**2, axis=0))
+    w = w/wn[np.newaxis, :]
+    # h = h*wn[:, np.newaxis]
 
     # Internal parameters
     flr = 1e-9
@@ -100,10 +96,10 @@ def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
     div_beta = beta
     h_ind = h_update_indices.flatten()
     w_ind = w_update_indices.flatten()
-    update_h = h_ind.sum(0)
-    update_w = w_ind.sum(0)
+    update_h = np.sum(h_ind) > 0
+    update_w = np.sum(w_ind) > 0
 
-    print(f'INFO: Performing sparse NMF with beta-divergence, beta={div_beta}')
+    log(f'INFO: Performing sparse NMF with beta-divergence, beta={div_beta}')
     for it in range(max_iter):
         # updates H
         if update_h > 0:
@@ -183,15 +179,12 @@ def sparseNMF(v, beta=1, cf='kl', sparsity=0, max_iter=100, conv_eps=0,
         objective_div[it] = div
         objective_cost[it] = cost
 
-        # output if needed
-        if display:
-            print(f'iteration {it}: div={div}, cost={cost}')
-
+        log(f'iteration {it}: div={div}, cost={cost}')
         # convergence check
         if it > 0 and conv_eps > 0:
             e = np.abs(cost - last_cost)/last_cost
             if e < conv_eps:
-                print('Convergence reached, aborting iteration')
+                log('Convergence reached, aborting iteration')
                 objective_div = objective_div[:it]
                 objective_cost = objective_cost[:it]
                 break  # exit the loop
