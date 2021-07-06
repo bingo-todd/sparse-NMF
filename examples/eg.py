@@ -34,7 +34,7 @@ def main():
     ax[2].set_title('W')
     ax[3].imshow(h, aspect='auto', cmap=cmap)
     ax[3].set_title('H')
-    fig.savefig('images/eg_python.png')
+    fig.savefig('../images/eg_python.png')
 
 
 if __name__ == '__main__':
